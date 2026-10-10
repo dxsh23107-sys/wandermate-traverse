@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Trip {
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  destination      String
+  category         String          @default("Trek")
+  duration         String
+  price            Int
+  originalPrice    Int?
+  startingLocation String
+  endingLocation   String
+  availableSeats   Int             @default(12)
+  dates            String
+  shortDescription String
+  fullDescription  String
+  coverImage       String
+  gallery          String
+  highlights       String
+  inclusions       String
+  exclusions       String
+  faqs             String
+  importantInfo    String
+  status           String          @default("ACTIVE")
+  featured         Boolean         @default(false)
+  itinerary        ItineraryItem[]
+  bookings         Booking[]
+  galleryImages    GalleryImage[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model ItineraryItem {
+  id            String   @id @default(cuid())
+  tripId        String
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  day           Int
+  title         String
+  description   String
+  meals         String?
+  stay          String?
+  createdAt     DateTime @default(now())
+}
+
+model Booking {
+  id              String   @id @default(cuid())
+  bookingId       String   @unique
+  tripId          String?
+  trip            Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  tripTitle       String
+  customerName    String
+  email           String
+  phone           String
+  travelers       Int      @default(1)
+  date            String
+  specialRequests String?
+  totalPrice      Int      @default(0)
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  title     String
+  category  String   @default("General")
+  tripId    String?
+  trip      Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  featured  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model WebsiteContent {
+  id        String   @id
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id             String   @id @default("default")
+  brandName      String   @default("Wandermate Traverse")
+  tagline        String   @default("Less Talk. More Traverse.")
+  logoUrl        String?
+  whatsappNumber String   @default("8779884225")
+  instagram      String   @default("@wandermate.traversee")
+  email          String   @default("wandermate@wt.in")
+  phone          String   @default("+91 8779884225")
+  address        String   @default("India")
+  currencySymbol String   @default("₹")
+  updatedAt      DateTime @updatedAt
+}
