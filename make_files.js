@@ -882,9 +882,8 @@ export async function PUT(request: Request) {
 // 11. /api/upload/route.ts
 writeFile('src/app/api/upload/route.ts', `
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { getSession } from "@/lib/auth";
-import fs from "fs";
-import path from "path";
 
 export async function POST(request: Request) {
   try {
@@ -900,24 +899,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    // Clean file name
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = \`\${timestamp}_\${safeName}\`;
-    const filePath = path.join(uploadsDir, fileName);
+    const blob = await put(\`uploads/\${fileName}\`, file, {
+      access: "public",
+      addRandomSuffix: true,
+    });
 
-    fs.writeFileSync(filePath, buffer);
-
-    const publicUrl = \`/uploads/\${fileName}\`;
-    return NextResponse.json({ success: true, url: publicUrl });
+    return NextResponse.json({ success: true, url: blob.url });
   } catch (error: any) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed: " + error.message }, { status: 500 });
